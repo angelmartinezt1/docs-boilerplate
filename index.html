@@ -19,6 +19,9 @@
              loadFromJSON('api-config.json');
             // Opción 2: Cargar desde archivo YAML
             // loadFromYAML('api-config.yaml');
+            
+            // Initialize search modal
+            initializeSearchModal();
         });
     </script>
 </head>
@@ -76,8 +79,43 @@
             <!-- Logo se generará automáticamente -->
         </div>
         <div class="header-actions">
-            <input type="text" class="search-box" placeholder="Buscar">
+            <input type="text" class="search-box" placeholder="Buscar endpoints..." id="searchBox">
             <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+        </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div class="search-modal" id="searchModal">
+        <div class="search-modal-overlay" id="searchModalOverlay"></div>
+        <div class="search-modal-content">
+            <div class="search-modal-header">
+                <div class="search-input-container">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <input type="text" class="search-modal-input" id="searchModalInput" placeholder="Buscar endpoints...">
+                    <kbd class="search-shortcut">ESC</kbd>
+                </div>
+            </div>
+            <div class="search-modal-body">
+                <div class="search-results" id="searchResults">
+                    <div class="search-empty-state">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        <p>Escribe para buscar endpoints</p>
+                    </div>
+                </div>
+            </div>
+            <div class="search-modal-footer">
+                <div class="search-shortcuts">
+                    <kbd>↑</kbd><kbd>↓</kbd> para navegar
+                    <kbd>Enter</kbd> para seleccionar
+                    <kbd>ESC</kbd> para cerrar
+                </div>
+            </div>
         </div>
     </div>
 
