@@ -2223,13 +2223,101 @@ class APIDocGenerator {
                         <p><strong>Tipo:</strong> ${token.token_type}</p>
                         <p><strong>Expira:</strong> ${expiresAt.toLocaleString()}</p>
                         <p><strong>Estado:</strong> ${isExpired ? '❌ Expirado' : '✅ Válido'}</p>
-                        <p><strong>Token:</strong> <code>${token.access_token.substring(0, 30)}...</code></p>
+                        <div class="token-row">
+                            <p><strong>Token:</strong> <code id="token-display">${token.access_token.substring(0, 30)}...</code></p>
+                            <button class="btn-copy" id="copy-token-btn" title="Copiar token completo">📋</button>
+                        </div>
                     </div>
                 `;
+                
+                // Agregar event listener para el botón de copiar
+                setTimeout(() => {
+                    const copyBtn = document.getElementById('copy-token-btn');
+                    if (copyBtn) {
+                        copyBtn.addEventListener('click', () => this.copyTokenToClipboard(token.access_token));
+                    }
+                }, 100);
             } catch (e) {
                 console.error('Error displaying token info:', e);
             }
         }
+    }
+
+    /**
+     * Copia el token al portapapeles
+     */
+    async copyTokenToClipboard(token) {
+        const copyBtn = document.getElementById('copy-token-btn');
+        const originalText = copyBtn.innerHTML;
+        
+        try {
+            // Usar la API moderna del portapapeles
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(token);
+            } else {
+                // Fallback para navegadores antiguos o contextos no seguros
+                const textArea = document.createElement('textarea');
+                textArea.value = token;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand('copy');
+                textArea.remove();
+            }
+            
+            // Feedback visual
+            copyBtn.innerHTML = '✅';
+            copyBtn.classList.add('copied');
+            copyBtn.title = 'Token copiado!';
+            
+            // Mostrar notificación temporal
+            this.showCopyNotification('Token copiado al portapapeles');
+            
+            // Restaurar después de 2 segundos
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+                copyBtn.classList.remove('copied');
+                copyBtn.title = 'Copiar token completo';
+            }, 2000);
+            
+        } catch (error) {
+            console.error('Error copying token:', error);
+            copyBtn.innerHTML = '❌';
+            copyBtn.title = 'Error al copiar';
+            
+            // Mostrar notificación de error
+            this.showCopyNotification('Error al copiar token', 'error');
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+                copyBtn.title = 'Copiar token completo';
+            }, 2000);
+        }
+    }
+
+    /**
+     * Muestra una notificación temporal
+     */
+    showCopyNotification(message, type = 'success') {
+        // Crear o reutilizar el elemento de notificación
+        let notification = document.getElementById('copy-notification');
+        if (!notification) {
+            notification = document.createElement('div');
+            notification.id = 'copy-notification';
+            notification.className = 'copy-notification';
+            document.body.appendChild(notification);
+        }
+        
+        notification.textContent = message;
+        notification.className = `copy-notification ${type} show`;
+        
+        // Auto-ocultar después de 3 segundos
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 3000);
     }
 }
 
