@@ -2301,12 +2301,23 @@ class APIDocGenerator {
                 const tokenInfo = this.getTokenInfo();
                 const isManual = tokenInfo && tokenInfo.isManual;
                 indicator.className = 'sso-token-indicator valid';
-                indicator.innerHTML = `
-                    🔑 Usando token ${isManual ? 'manual' : 'SSO automático'}
-                    <span class="token-options">
-                        | <a href="#" onclick="generator.showManualTokenInput('${indicatorId}'); return false;">Token manual</a>
-                    </span>
-                `;
+                
+                if (isManual) {
+                    indicator.innerHTML = `
+                        🔑 Usando token manual
+                        <span class="token-options">
+                            | <a href="#sso">Cambiar a SSO</a> | 
+                            <a href="#" onclick="generator.showManualTokenInput('${indicatorId}'); return false;">Cambiar token</a>
+                        </span>
+                    `;
+                } else {
+                    indicator.innerHTML = `
+                        🔑 Usando token SSO automático
+                        <span class="token-options">
+                            | <a href="#" onclick="generator.showManualTokenInput('${indicatorId}'); return false;">Cambiar a manual</a>
+                        </span>
+                    `;
+                }
             } else {
                 indicator.className = 'sso-token-indicator invalid';
                 indicator.innerHTML = `
@@ -2599,6 +2610,9 @@ class APIDocGenerator {
      * Muestra el input modal para token manual
      */
     showManualTokenInput(indicatorId) {
+        const existingToken = this.getValidAccessToken();
+        const tokenInfo = this.getTokenInfo();
+        const isEditingExisting = !!existingToken;
         // Crear modal si no existe
         let modal = document.getElementById('manual-token-modal');
         if (!modal) {
@@ -2612,18 +2626,24 @@ class APIDocGenerator {
             <div class="manual-token-overlay" onclick="this.parentElement.style.display='none'"></div>
             <div class="manual-token-content">
                 <div class="manual-token-header">
-                    <h3>🔑 Token Manual</h3>
+                    <h3>🔑 ${isEditingExisting ? 'Editar Token Manual' : 'Token Manual'}</h3>
                     <button class="close-btn" onclick="document.getElementById('manual-token-modal').style.display='none'">✕</button>
                 </div>
                 
                 <div class="manual-token-body">
-                    <p>Pegue su access token JWT aquí:</p>
+                    <p>${isEditingExisting ? 'Edite su access token JWT:' : 'Pegue su access token JWT aquí:'}</p>
+                    ${isEditingExisting && tokenInfo ? `
+                        <div class="current-token-info">
+                            <small><strong>Token actual:</strong> ${tokenInfo.isManual ? 'Manual' : 'SSO automático'} 
+                            (expira: ${tokenInfo.expires_at.toLocaleString()})</small>
+                        </div>
+                    ` : ''}
                     <textarea 
                         id="manual-token-input" 
                         class="manual-token-textarea"
                         placeholder="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
                         rows="4"
-                    ></textarea>
+                    >${isEditingExisting ? existingToken : ''}</textarea>
                     
                     <div class="token-validation" id="token-validation"></div>
                 </div>
@@ -2652,6 +2672,13 @@ class APIDocGenerator {
         textarea.addEventListener('input', () => {
             this.validateTokenFormat(textarea.value);
         });
+
+        // Si ya hay un token, validarlo inmediatamente
+        if (existingToken) {
+            setTimeout(() => {
+                this.validateTokenFormat(existingToken);
+            }, 100);
+        }
     }
 
     /**

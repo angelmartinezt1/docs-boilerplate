@@ -4194,6 +4194,28 @@ body.dark-mode .manual-token-body p {
     color: #9ca3af;
 }
 
+.current-token-info {
+    background: #f0f9ff;
+    border: 1px solid #0ea5e9;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+}
+
+.current-token-info small {
+    color: #075985;
+    font-size: 12px;
+}
+
+body.dark-mode .current-token-info {
+    background: rgba(14, 165, 233, 0.1);
+    border-color: #0284c7;
+}
+
+body.dark-mode .current-token-info small {
+    color: #38bdf8;
+}
+
 .manual-token-textarea {
     width: 100%;
     min-height: 100px;
