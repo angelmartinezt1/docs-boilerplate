@@ -3657,3 +3657,240 @@ body.dark-mode .section:hover {
 body.dark-mode .endpoint-header:hover {
     background: rgba(59, 130, 246, 0.035) !important;
 }
+
+/* ========== ESTILOS PARA FORMULARIO SSO ========== */
+
+.sso-form-container {
+    background: rgba(59, 130, 246, 0.02);
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 24px;
+    margin: 16px 0;
+}
+
+body.dark-mode .sso-form-container {
+    background: rgba(59, 130, 246, 0.03);
+    border-color: #374151;
+}
+
+.sso-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 14px;
+}
+
+body.dark-mode .form-group label {
+    color: #e2e8f0;
+}
+
+.form-group input {
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: 'Monaco', 'Consolas', monospace;
+    background: #ffffff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+body.dark-mode .form-group input {
+    background: #1f2937;
+    border-color: #4b5563;
+    color: #f9fafb;
+}
+
+body.dark-mode .form-group input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+    transform: translateY(-1px);
+}
+
+body.dark-mode .btn-primary {
+    background: #2563eb;
+}
+
+body.dark-mode .btn-primary:hover:not(:disabled) {
+    background: #1d4ed8;
+}
+
+body.dark-mode .btn-secondary {
+    background: #4b5563;
+}
+
+body.dark-mode .btn-secondary:hover {
+    background: #374151;
+}
+
+.sso-status {
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    min-height: 20px;
+}
+
+.sso-status.loading {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fbbf24;
+}
+
+.sso-status.success {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #10b981;
+}
+
+.sso-status.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #ef4444;
+}
+
+body.dark-mode .sso-status.loading {
+    background: rgba(251, 191, 36, 0.1);
+    color: #fbbf24;
+    border-color: #92400e;
+}
+
+body.dark-mode .sso-status.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border-color: #065f46;
+}
+
+body.dark-mode .sso-status.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-color: #991b1b;
+}
+
+.sso-token-info {
+    margin-top: 16px;
+    padding: 16px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.sso-token-info.valid {
+    background: #f0fdf4;
+    border: 1px solid #16a34a;
+}
+
+.sso-token-info.expired {
+    background: #fef2f2;
+    border: 1px solid #dc2626;
+}
+
+body.dark-mode .sso-token-info.valid {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: #059669;
+}
+
+body.dark-mode .sso-token-info.expired {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: #dc2626;
+}
+
+.sso-token-info h4 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    color: #374151;
+}
+
+body.dark-mode .sso-token-info h4 {
+    color: #e2e8f0;
+}
+
+.token-details p {
+    margin: 4px 0;
+    color: #6b7280;
+}
+
+body.dark-mode .token-details p {
+    color: #9ca3af;
+}
+
+.token-details code {
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: 'Monaco', 'Consolas', monospace;
+}
+
+body.dark-mode .token-details code {
+    background: #374151;
+    color: #f9fafb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn-primary, .btn-secondary {
+        width: 100%;
+    }
+}

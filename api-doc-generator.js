@@ -219,6 +219,7 @@ class APIDocGenerator {
                 <div class="sidebar-item" data-target="introduction">Introducción</div>
                 <div class="sidebar-item" data-target="authentication">Autenticación</div>
                 <div class="sidebar-item" data-target="base-url">URL del Servicio</div>
+                <div class="sidebar-item" data-target="sso">SSO - Access Token</div>
                 <div class="sidebar-item" data-target="status-codes">Estatus y códigos de Error</div>
             </div>
         `;
@@ -307,6 +308,10 @@ class APIDocGenerator {
         urlDiv.textContent = this.config.servers?.[0]?.url || 'https://api.example.com';
         baseUrlSection.appendChild(urlDiv);
         mainContent.appendChild(baseUrlSection);
+
+        // SSO - Obtener Access Token
+        const ssoSection = this.generateSSOSection();
+        mainContent.appendChild(ssoSection);
 
         // Códigos de estado
         const statusSection = this.generateStatusCodesSection();
@@ -1992,6 +1997,238 @@ class APIDocGenerator {
         if (codeSidebar) {
             const existingSections = codeSidebar.querySelectorAll('.section-urls, .request-section, .response-section');
             existingSections.forEach(section => section.remove());
+        }
+    }
+
+    /**
+     * Genera la sección SSO para obtener access token
+     */
+    generateSSOSection() {
+        const section = document.createElement('section');
+        section.id = 'sso';
+        section.className = 'section';
+        
+        const header = document.createElement('div');
+        header.className = 'section-header';
+        
+        const title = document.createElement('h2');
+        title.className = 'section-title';
+        title.textContent = 'SSO - Obtener Access Token';
+        header.appendChild(title);
+        section.appendChild(header);
+        
+        const description = document.createElement('p');
+        description.style.marginBottom = '20px';
+        description.textContent = 'Configure y obtenga su access token para autenticarse con la API usando Keycloak SSO.';
+        section.appendChild(description);
+        
+        const formContainer = document.createElement('div');
+        formContainer.className = 'sso-form-container';
+        formContainer.innerHTML = `
+            <form id="sso-form" class="sso-form">
+                <div class="form-group">
+                    <label for="sso-url">URL del Servidor SSO:</label>
+                    <input type="url" id="sso-url" name="url" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="sso-client-id">Client ID:</label>
+                    <input type="text" id="sso-client-id" name="client_id" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="sso-username">Username:</label>
+                    <input type="text" id="sso-username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="sso-password">Password:</label>
+                    <input type="password" id="sso-password" name="password" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary" id="sso-submit">Obtener Access Token</button>
+                    <button type="button" class="btn-secondary" id="sso-clear">Limpiar Datos</button>
+                </div>
+                
+                <div class="sso-status" id="sso-status"></div>
+                <div class="sso-token-info" id="sso-token-info"></div>
+            </form>
+        `;
+        
+        section.appendChild(formContainer);
+        
+        // Inicializar funcionalidad SSO
+        setTimeout(() => this.initializeSSOForm(), 100);
+        
+        return section;
+    }
+
+    /**
+     * Inicializa la funcionalidad del formulario SSO
+     */
+    initializeSSOForm() {
+        // Cargar datos guardados
+        this.loadSSOData();
+        
+        // Event listeners
+        const form = document.getElementById('sso-form');
+        const clearBtn = document.getElementById('sso-clear');
+        
+        if (form) {
+            form.addEventListener('submit', (e) => this.handleSSOSubmit(e));
+        }
+        
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => this.clearSSOData());
+        }
+        
+        // Mostrar información del token actual
+        this.updateTokenInfo();
+    }
+
+    /**
+     * Maneja el envío del formulario SSO
+     */
+    async handleSSOSubmit(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const formData = new FormData(form);
+        const statusDiv = document.getElementById('sso-status');
+        const submitBtn = document.getElementById('sso-submit');
+        
+        // Datos del formulario
+        const ssoData = {
+            url: formData.get('url'),
+            client_id: formData.get('client_id'),
+            username: formData.get('username'),
+            password: formData.get('password')
+        };
+        
+        // Guardar datos en localStorage (sin password)
+        const dataToSave = { ...ssoData };
+        delete dataToSave.password;
+        localStorage.setItem('sso_data', JSON.stringify(dataToSave));
+        
+        // UI de carga
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Obteniendo token...';
+        statusDiv.className = 'sso-status loading';
+        statusDiv.textContent = 'Conectando con el servidor SSO...';
+        
+        try {
+            const response = await fetch(ssoData.url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    client_id: ssoData.client_id,
+                    grant_type: 'password',
+                    username: ssoData.username,
+                    password: ssoData.password
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.access_token) {
+                // Guardar token con timestamp
+                const tokenData = {
+                    access_token: result.access_token,
+                    expires_in: result.expires_in || 3600,
+                    token_type: result.token_type || 'Bearer',
+                    timestamp: Date.now()
+                };
+                
+                localStorage.setItem('sso_token', JSON.stringify(tokenData));
+                
+                statusDiv.className = 'sso-status success';
+                statusDiv.textContent = '✅ Access token obtenido exitosamente';
+                
+                this.updateTokenInfo();
+                
+            } else {
+                throw new Error(result.error_description || result.error || 'Error desconocido');
+            }
+            
+        } catch (error) {
+            console.error('Error SSO:', error);
+            statusDiv.className = 'sso-status error';
+            statusDiv.textContent = `❌ Error: ${error.message}`;
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Obtener Access Token';
+        }
+    }
+
+    /**
+     * Carga los datos SSO guardados
+     */
+    loadSSOData() {
+        const savedData = localStorage.getItem('sso_data');
+        if (savedData) {
+            try {
+                const data = JSON.parse(savedData);
+                document.getElementById('sso-url').value = data.url || '';
+                document.getElementById('sso-client-id').value = data.client_id || '';
+                document.getElementById('sso-username').value = data.username || '';
+            } catch (e) {
+                console.error('Error loading SSO data:', e);
+            }
+        } else {
+            // Datos por defecto
+            document.getElementById('sso-url').value = 'https://sso.dev.claroshop.com/auth/realms/claroshop-sapi-sa-cv/protocol/openid-connect/token';
+            document.getElementById('sso-client-id').value = 'Onboarding-t1';
+            document.getElementById('sso-username').value = 'telmex@t1.com';
+            document.getElementById('sso-password').value = 'Carso123';
+        }
+    }
+
+    /**
+     * Limpia los datos SSO
+     */
+    clearSSOData() {
+        if (confirm('¿Está seguro de que desea limpiar todos los datos SSO y el token?')) {
+            localStorage.removeItem('sso_data');
+            localStorage.removeItem('sso_token');
+            
+            document.getElementById('sso-form').reset();
+            document.getElementById('sso-status').textContent = '';
+            document.getElementById('sso-token-info').textContent = '';
+            
+            // Restaurar valores por defecto
+            this.loadSSOData();
+        }
+    }
+
+    /**
+     * Actualiza la información del token
+     */
+    updateTokenInfo() {
+        const tokenData = localStorage.getItem('sso_token');
+        const tokenInfoDiv = document.getElementById('sso-token-info');
+        
+        if (tokenData && tokenInfoDiv) {
+            try {
+                const token = JSON.parse(tokenData);
+                const expiresAt = new Date(token.timestamp + (token.expires_in * 1000));
+                const isExpired = Date.now() > expiresAt.getTime();
+                
+                tokenInfoDiv.className = isExpired ? 'sso-token-info expired' : 'sso-token-info valid';
+                tokenInfoDiv.innerHTML = `
+                    <h4>🔑 Token Información:</h4>
+                    <div class="token-details">
+                        <p><strong>Tipo:</strong> ${token.token_type}</p>
+                        <p><strong>Expira:</strong> ${expiresAt.toLocaleString()}</p>
+                        <p><strong>Estado:</strong> ${isExpired ? '❌ Expirado' : '✅ Válido'}</p>
+                        <p><strong>Token:</strong> <code>${token.access_token.substring(0, 30)}...</code></p>
+                    </div>
+                `;
+            } catch (e) {
+                console.error('Error displaying token info:', e);
+            }
         }
     }
 }
