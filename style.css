@@ -715,11 +715,6 @@ body.dark-mode .property-description {
     flex-direction: column;
 }
 
-/* Request Section */
-.request-section {
-    
-}
-
 /* Endpoint Header */
 .endpoint-header {
     background: #f6f6f7;
@@ -782,12 +777,6 @@ body.dark-mode .property-description {
     color: #94a3b8;
 }
 
-/* Code Block */
-.code-block {
-
-    border-bottom-left-radius:5px ;
-    border-bottom-right-radius: 5px;
-}
 
 .code-content {
     background: #ffffff;
@@ -979,11 +968,6 @@ body.dark-mode .code-sidebar {
     background: #1e293b;
 }
 
-body.dark-mode .code-language-selector,
-body.dark-mode .code-block,
-body.dark-mode .response-content {
-    background: #b8b9ba;
-}
 
 body.dark-mode .response-header {
     background: #1e293b;
@@ -2017,21 +2001,47 @@ body.dark-mode .json-null {
 
 
 
-.response-section{
-    position:fixed !important;
-    right: 30px;
-    top:260px;
-    z-index: 1000;
-
-    width: 460px;
+/* Fixed Code Sidebar Positioning and Layout */
+.request-section {
+    position: fixed !important;
+    right: 20px;
+    top: 80px;
+    width: 480px;
+    max-width: calc(100vw - 40px);
+    z-index: 999;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    max-height: calc(50vh - 100px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
-.request-section{
-    width: 460px;
-    position:fixed !important;
-    right: 30px;
-    top:70px;
-    z-index: 1000;
+.response-section {
+    position: fixed !important;
+    right: 20px;
+    top: calc(50vh + 20px);
+    width: 480px;
+    max-width: calc(100vw - 40px);
+    z-index: 999;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    max-height: calc(50vh - 100px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Dark mode for fixed sections */
+body.dark-mode .request-section,
+body.dark-mode .response-section {
+    background: #1f2937;
+    border-color: #374151;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
 
 
@@ -3094,4 +3104,482 @@ body.dark-mode .search-modal-body::-webkit-scrollbar-thumb {
 
 body.dark-mode .search-modal-body::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+}
+
+/* Highlight.js Integration Styles */
+.code-text .hljs {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+}
+
+/* Enhanced Code Sidebar Styles */
+
+/* Endpoint Header */
+.endpoint-header {
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+body.dark-mode .endpoint-header {
+    background: #374151;
+    border-bottom-color: #4b5563;
+}
+
+.endpoint-header .endpoint-url {
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 13px;
+    color: #1f2937;
+    font-weight: 600;
+}
+
+body.dark-mode .endpoint-header .endpoint-url {
+    color: #f9fafb;
+}
+
+/* Language Selector */
+.code-language-selector {
+    display: flex;
+    align-items: center;
+    background: #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 8px 12px;
+    gap: 8px;
+    flex-shrink: 0;
+    overflow-x: auto;
+}
+
+body.dark-mode .code-language-selector {
+    background: #2d3748;
+    border-bottom-color: #4a5568;
+}
+
+.lang-tab {
+    padding: 6px 12px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.lang-tab:hover {
+    background: #e2e8f0;
+    color: #334155;
+}
+
+.lang-tab.active {
+    background: #3b82f6;
+    color: white;
+}
+
+body.dark-mode .lang-tab {
+    color: #a0aec0;
+}
+
+body.dark-mode .lang-tab:hover {
+    background: #4a5568;
+    color: #e2e8f0;
+}
+
+body.dark-mode .lang-tab.active {
+    background: #4299e1;
+    color: white;
+}
+
+.copy-button {
+    margin-left: auto;
+    padding: 6px 8px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.copy-button:hover {
+    background: #e2e8f0;
+    color: #334155;
+}
+
+body.dark-mode .copy-button {
+    color: #a0aec0;
+}
+
+body.dark-mode .copy-button:hover {
+    background: #4a5568;
+    color: #e2e8f0;
+}
+
+/* Code Block Container */
+.code-block {
+    flex: 1;
+    background: #fafafa;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-height: 0; /* Important for flex children */
+}
+
+body.dark-mode .code-block {
+    background: #1a202c;
+}
+
+/* Code Content */
+.code-content {
+    flex: 1;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    padding: 0;
+    margin: 0;
+    font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    background: inherit;
+    min-height: 0; /* Important for flex children to scroll */
+    max-height: none; /* Remove any max-height restrictions */
+    white-space: nowrap; /* Allow horizontal scroll for long lines */
+}
+
+.code-content:not(.active) {
+    display: none;
+}
+
+/* Code Lines */
+.code-line {
+    display: flex;
+    align-items: flex-start;
+    min-height: 18px;
+    padding: 2px 0;
+    border-left: 3px solid transparent;
+    transition: all 0.1s;
+    min-width: max-content; /* Prevent line wrapping */
+    flex-shrink: 0; /* Prevent lines from shrinking */
+}
+
+.code-line:hover {
+    background-color: rgba(59, 130, 246, 0.05);
+    border-left-color: #3b82f6;
+}
+
+body.dark-mode .code-line:hover {
+    background-color: rgba(96, 165, 250, 0.1);
+    border-left-color: #60a5fa;
+}
+
+/* Line Numbers */
+.line-number {
+    display: inline-block;
+    width: 32px;
+    padding: 0 8px;
+    color: #9ca3af;
+    text-align: right;
+    font-size: 11px;
+    user-select: none;
+    flex-shrink: 0;
+    background: #f8fafc;
+    border-right: 1px solid #e5e7eb;
+}
+
+body.dark-mode .line-number {
+    color: #6b7280;
+    background: #2d3748;
+    border-right-color: #4a5568;
+}
+
+/* Code Text */
+.code-text {
+    flex: 1;
+    padding: 0 12px;
+    white-space: pre;
+    overflow: visible;
+    word-break: normal;
+    color: #1f2937;
+    min-width: max-content; /* Ensure text doesn't wrap, allowing horizontal scroll */
+}
+
+body.dark-mode .code-text {
+    color: #e2e8f0;
+}
+
+/* Response Header */
+.response-header {
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+body.dark-mode .response-header {
+    background: #374151;
+    border-bottom-color: #4b5563;
+}
+
+.response-text {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1f2937;
+}
+
+body.dark-mode .response-text {
+    color: #f9fafb;
+}
+
+.response-format {
+    font-size: 12px;
+    color: #6b7280;
+    background: #e5e7eb;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+body.dark-mode .response-format {
+    color: #d1d5db;
+    background: #4b5563;
+}
+
+/* Response Content */
+.response-content {
+    flex: 1;
+    overflow: auto !important;
+    background: #fafafa;
+    font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    min-height: 0; /* Important for flex children to scroll */
+    white-space: pre; /* Preserve formatting and allow horizontal scroll */
+    padding: 12px;
+}
+
+body.dark-mode .response-content {
+    background: #1a202c;
+}
+
+/* JSON Response Styles */
+.json-response {
+    padding: 0;
+}
+
+.json-line {
+    display: flex;
+    align-items: flex-start;
+    min-height: 18px;
+    padding: 2px 0;
+}
+
+.json-content {
+    flex: 1;
+    padding: 0 12px;
+    white-space: pre;
+    color: #1f2937;
+}
+
+body.dark-mode .json-content {
+    color: #e2e8f0;
+}
+
+.json-key {
+    color: #0969da;
+    font-weight: 600;
+}
+
+.json-string {
+    color: #0a3069;
+}
+
+.json-number {
+    color: #0550ae;
+}
+
+body.dark-mode .json-key {
+    color: #58a6ff;
+}
+
+body.dark-mode .json-string {
+    color: #a5d6ff;
+}
+
+body.dark-mode .json-number {
+    color: #79c0ff;
+}
+
+/* Status Line */
+.response-status-line {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f1f5f9;
+    border-bottom: 1px solid #e2e8f0;
+    gap: 8px;
+}
+
+body.dark-mode .response-status-line {
+    background: #2d3748;
+    border-bottom-color: #4a5568;
+}
+
+.status-text {
+    font-weight: 600;
+    color: #059669;
+    font-size: 13px;
+}
+
+body.dark-mode .status-text {
+    color: #68d391;
+}
+
+/* Custom Scrollbars for Code Areas */
+.code-content::-webkit-scrollbar,
+.response-content::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.code-content::-webkit-scrollbar-track,
+.response-content::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+body.dark-mode .code-content::-webkit-scrollbar-track,
+body.dark-mode .response-content::-webkit-scrollbar-track {
+    background: #2d3748;
+}
+
+.code-content::-webkit-scrollbar-thumb,
+.response-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+body.dark-mode .code-content::-webkit-scrollbar-thumb,
+body.dark-mode .response-content::-webkit-scrollbar-thumb {
+    background: #4a5568;
+}
+
+.code-content::-webkit-scrollbar-thumb:hover,
+.response-content::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+body.dark-mode .code-content::-webkit-scrollbar-thumb:hover,
+body.dark-mode .response-content::-webkit-scrollbar-thumb:hover {
+    background: #718096;
+}
+
+/* Responsive Design for Code Sidebar */
+@media (max-width: 1440px) {
+    .request-section,
+    .response-section {
+        width: 420px;
+    }
+}
+
+@media (max-width: 1280px) {
+    .request-section,
+    .response-section {
+        width: 380px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .request-section,
+    .response-section {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .request-section,
+    .response-section {
+        position: relative !important;
+        right: auto;
+        top: auto;
+        width: 100%;
+        max-width: none;
+        margin: 16px 0;
+        max-height: 400px;
+        display: flex;
+    }
+}
+
+/* Enhanced focus styles */
+.code-content:focus-within {
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+}
+
+body.dark-mode .code-content:focus-within {
+    outline-color: #60a5fa;
+}
+
+/* Force proper scroll behavior on all code containers */
+.request-section .code-content,
+.response-section .code-content,
+.request-section .response-content,
+.response-section .response-content {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    min-height: 100px; /* Minimum height to ensure scroll appears */
+    max-width: 100%; /* Don't exceed container width */
+}
+
+/* Ensure scrollbars are always visible when content overflows */
+.code-content,
+.response-content {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+body.dark-mode .code-content,
+body.dark-mode .response-content {
+    scrollbar-color: #4a5568 #2d3748;
+}
+
+/* Remove any conflicting overflow settings from parent elements */
+.request-section,
+.response-section {
+    contain: layout; /* Optimize rendering */
+}
+
+.request-section > *,
+.response-section > * {
+    min-height: 0; /* Allow flex children to shrink */
+}
+
+/* Ensure code text doesn't break inappropriately */
+.code-text,
+.json-content {
+    word-break: keep-all;
+    overflow-wrap: normal;
+    text-wrap: nowrap;
+}
+
+/* Make sure long URLs and paths don't break */
+.code-text a,
+.code-text .hljs-string {
+    word-break: keep-all;
+    white-space: nowrap;
 }

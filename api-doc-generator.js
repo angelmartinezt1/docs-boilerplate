@@ -1053,32 +1053,71 @@ class APIDocGenerator {
     }
 
     /**
-     * Formatea el bloque de código para mostrarlo con líneas y estilos
+     * Highlight code using Highlight.js
      */
-    formatCodeBlock(code, lang) {
-        const lines = code.split('\n');
-        return lines.map((line, idx) => `<div class=\"code-line\"><span class=\"line-number\">${idx + 1}</span><span class=\"code-text\">${line.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span></div>`).join('');
+    highlightSyntax(code, lang) {
+        if (!code || typeof code !== 'string') {
+            return '';
+        }
+        
+        // Map our language names to Highlight.js language names
+        const langMap = {
+            'js': 'javascript',
+            'javascript': 'javascript',
+            'node': 'javascript',
+            'python': 'python',
+            'go': 'go',
+            'curl': 'bash',
+            'json': 'json'
+        };
+        
+        const hljsLang = langMap[lang] || lang;
+        
+        try {
+            // Use Highlight.js to highlight the code
+            if (window.hljs && window.hljs.highlight) {
+                const result = window.hljs.highlight(code, { language: hljsLang });
+                return result.value;
+            } else {
+                // Fallback if Highlight.js is not loaded
+                return code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+        } catch (error) {
+            console.warn('Error highlighting code:', error);
+            return code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
     }
 
     /**
-     * Formatea una línea de cURL
+     * Formatea el bloque de código para mostrarlo con líneas y estilos
+     */
+    formatCodeBlock(code, lang) {
+        if (!code || typeof code !== 'string') {
+            return '<div class="code-line"><span class="line-number">1</span><span class="code-text">// No code available</span></div>';
+        }
+        
+        // Highlight the entire code block at once (more efficient for Highlight.js)
+        const highlightedCode = this.highlightSyntax(code, lang);
+        
+        // Split the highlighted code into lines
+        const lines = highlightedCode.split('\n');
+        
+        const formattedLines = lines.map((line, idx) => {
+            return `<div class="code-line"><span class="line-number">${idx + 1}</span><span class="code-text">${line}</span></div>`;
+        });
+        
+        return formattedLines.join('');
+    }
+
+    /**
+     * Formatea una línea de cURL (usando Highlight.js)
      */
     formatCurlLine(line) {
-        // Crear un elemento temporal para manipular el HTML de forma segura
-        const tempDiv = document.createElement('div');
-        tempDiv.textContent = line; // Esto escapa automáticamente el contenido
-        let htmlContent = tempDiv.innerHTML;
+        if (!line || typeof line !== 'string') {
+            return '';
+        }
         
-        // Ahora aplicar las transformaciones
-        htmlContent = htmlContent
-            .replace(/curl/g, '<span class="code-command">curl</span>')
-            .replace(/-X/g, '<span class="code-flag">-X</span>')
-            .replace(/-H/g, '<span class="code-flag">-H</span>')
-            .replace(/-d/g, '<span class="code-flag">-d</span>')
-            .replace(/&quot;([^&]+)&quot;/g, '<span class="code-string">&quot;$1&quot;</span>')
-            .replace(/\\$/, '<span class="code-escape">\\</span>');
-        
-        return htmlContent;
+        return this.highlightSyntax(line, 'bash');
     }
 
     /**

@@ -6,7 +6,18 @@
     <title>Implementación del Generador de Documentación</title>
     <!-- Incluir los estilos CSS de tu plantilla original aquí -->
     <link rel="stylesheet" href="style.css">
+    <!-- Highlight.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="hljs-light">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="hljs-dark" disabled>
         <!-- Incluir el script del generador -->
+    <!-- Highlight.js JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+    
     <script src="doc.js"></script>
     <script src="api-doc-generator.js"></script>
     <script src="main.js"></script>
@@ -22,7 +33,54 @@
             
             // Initialize search modal
             initializeSearchModal();
+            
+            // Initialize Highlight.js theme switching
+            initializeHighlightTheme();
         });
+        
+        // Function to initialize Highlight.js theme switching
+        function initializeHighlightTheme() {
+            // Function to update Highlight.js theme
+            function updateHighlightTheme() {
+                const isDarkMode = document.body.classList.contains('dark-mode');
+                const lightTheme = document.getElementById('hljs-light');
+                const darkTheme = document.getElementById('hljs-dark');
+                
+                if (isDarkMode) {
+                    lightTheme.disabled = true;
+                    darkTheme.disabled = false;
+                } else {
+                    lightTheme.disabled = false;
+                    darkTheme.disabled = true;
+                }
+            }
+            
+            // Update theme on page load
+            updateHighlightTheme();
+            
+            // Listen for theme changes (if there's a theme toggle function)
+            if (typeof window.toggleTheme === 'function') {
+                const originalToggleTheme = window.toggleTheme;
+                window.toggleTheme = function() {
+                    originalToggleTheme.call(this);
+                    setTimeout(updateHighlightTheme, 100);
+                };
+            }
+            
+            // Also listen for manual dark mode class changes
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        updateHighlightTheme();
+                    }
+                });
+            });
+            
+            observer.observe(document.body, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+        }
     </script>
 </head>
 <body>
