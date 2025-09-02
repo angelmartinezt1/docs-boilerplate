@@ -366,7 +366,19 @@ class APIDocGenerator {
         const interactiveForm = document.createElement('form');
         interactiveForm.className = 'interactive-endpoint-form';
         interactiveForm.style.margin = '20px 0';
-        interactiveForm.innerHTML = `<h3 style="margin-bottom:10px">Probar endpoint <span style="font-size:0.8em;color:#888">(Swagger Style)</span></h3>`;
+        // Verificar si hay token SSO disponible
+        const hasValidToken = this.getValidAccessToken() !== null;
+        const tokenStatus = hasValidToken 
+            ? `<div class="sso-token-indicator valid">🔑 Usando token SSO automáticamente</div>`
+            : `<div class="sso-token-indicator invalid">⚠️ Token SSO no disponible - <a href="#sso">Obtener token</a></div>`;
+        
+        interactiveForm.innerHTML = `
+            <h3 style="margin-bottom:10px">
+                Probar endpoint 
+                <span style="font-size:0.8em;color:#888">(Swagger Style)</span>
+            </h3>
+            ${this.config.security?.[0] ? tokenStatus : ''}
+        `;
 
         // Inputs para parámetros
         const paramInputs = [];
@@ -473,8 +485,18 @@ class APIDocGenerator {
                     return;
                 }
             }
+            // Agregar Authorization header si hay configuración de seguridad
             if (this.config.security?.[0]) {
-                fetchOptions.headers['Authorization'] = 'Bearer {access_token}';
+                const accessToken = this.getValidAccessToken();
+                if (accessToken) {
+                    fetchOptions.headers['Authorization'] = `Bearer ${accessToken}`;
+                } else {
+                    fetchOptions.headers['Authorization'] = 'Bearer {access_token}';
+                    // Mostrar advertencia en la respuesta
+                    responseArea.textContent = '⚠️ Token SSO no disponible o expirado. Obtenga un nuevo token en la sección SSO.';
+                    responseArea.style.color = '#f59e0b';
+                    return;
+                }
             }
 
             const startTime = performance.now();
@@ -1001,7 +1023,12 @@ class APIDocGenerator {
 
         // Headers
         if (this.config.security?.[0]) {
-            curlCommand += '\n  -H "Authorization: Bearer {access_token}"';
+            const accessToken = this.getValidAccessToken();
+            if (accessToken) {
+                curlCommand += `\n  -H "Authorization: Bearer ${accessToken}"`;
+            } else {
+                curlCommand += '\n  -H "Authorization: Bearer {access_token}"';
+            }
         }
         curlCommand += '\n  -H "Content-Type: application/json"';
 
@@ -1022,7 +1049,12 @@ class APIDocGenerator {
         const baseUrl = this.config.servers?.[0]?.url || 'https://api.example.com';
         let code = `fetch('${baseUrl}${path}', {\n    method: '${method.toUpperCase()}',\n    headers: {\n        'Content-Type': 'application/json',`;
         if (this.config.security?.[0]) {
-            code += `\n        'Authorization': 'Bearer {access_token}',`;
+            const accessToken = this.getValidAccessToken();
+            if (accessToken) {
+                code += `\n        'Authorization': 'Bearer ${accessToken}',`;
+            } else {
+                code += `\n        'Authorization': 'Bearer {access_token}',`;
+            }
         }
         code += `\n    },`;
         if (['post', 'put', 'patch'].includes(method.toLowerCase()) && operation.requestBody) {
@@ -1040,7 +1072,12 @@ class APIDocGenerator {
         const baseUrl = this.config.servers?.[0]?.url || 'https://api.example.com';
         let code = `import requests\n\nurl = '${baseUrl}${path}'\nheaders = {\n    'Content-Type': 'application/json',`;
         if (this.config.security?.[0]) {
-            code += `\n    'Authorization': 'Bearer {access_token}',`;
+            const accessToken = this.getValidAccessToken();
+            if (accessToken) {
+                code += `\n    'Authorization': 'Bearer ${accessToken}',`;
+            } else {
+                code += `\n    'Authorization': 'Bearer {access_token}',`;
+            }
         }
         code += `\n}`;
         if (['post', 'put', 'patch'].includes(method.toLowerCase()) && operation.requestBody) {
@@ -2240,6 +2277,32 @@ class APIDocGenerator {
             } catch (e) {
                 console.error('Error displaying token info:', e);
             }
+        }
+    }
+
+    /**
+     * Obtiene el access token válido del localStorage
+     */
+    getValidAccessToken() {
+        const tokenData = localStorage.getItem('sso_token');
+        if (!tokenData) {
+            return null;
+        }
+        
+        try {
+            const token = JSON.parse(tokenData);
+            const expiresAt = new Date(token.timestamp + (token.expires_in * 1000));
+            const isExpired = Date.now() > expiresAt.getTime();
+            
+            if (isExpired) {
+                console.warn('SSO token has expired');
+                return null;
+            }
+            
+            return token.access_token;
+        } catch (error) {
+            console.error('Error parsing SSO token:', error);
+            return null;
         }
     }
 

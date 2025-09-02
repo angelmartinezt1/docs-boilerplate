@@ -4010,3 +4010,56 @@ body.dark-mode .copy-notification.error {
         text-align: center;
     }
 }
+
+/* ========== INDICADOR DE TOKEN SSO EN FORMULARIOS ========== */
+
+.sso-token-indicator {
+    margin: 8px 0 16px 0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid;
+}
+
+.sso-token-indicator.valid {
+    background: #d1fae5;
+    color: #065f46;
+    border-color: #10b981;
+}
+
+.sso-token-indicator.invalid {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #f59e0b;
+}
+
+.sso-token-indicator.invalid a {
+    color: #d97706;
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+.sso-token-indicator.invalid a:hover {
+    color: #92400e;
+}
+
+body.dark-mode .sso-token-indicator.valid {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+    border-color: #059669;
+}
+
+body.dark-mode .sso-token-indicator.invalid {
+    background: rgba(245, 158, 11, 0.1);
+    color: #fbbf24;
+    border-color: #d97706;
+}
+
+body.dark-mode .sso-token-indicator.invalid a {
+    color: #fbbf24;
+}
+
+body.dark-mode .sso-token-indicator.invalid a:hover {
+    color: #f59e0b;
+}
