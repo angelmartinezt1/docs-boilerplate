@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implementación del Generador de Documentación</title>
+    <!-- Incluir los estilos CSS de tu plantilla original aquí -->
+    <link rel="stylesheet" href="style.css">
+        <!-- Incluir el script del generador -->
+    <script src="doc.js"></script>
+    <script src="api-doc-generator.js"></script>
+    <script src="main.js"></script>
+    
+    <!-- Script para cargar y generar la documentación -->
+    <script>
+      // Cargar la documentación al iniciar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Opción 1: Cargar desde archivo JSON
+             loadFromJSON('api-config.json');
+            // Opción 2: Cargar desde archivo YAML
+            // loadFromYAML('api-config.yaml');
+        });
+    </script>
+</head>
+<body>
+     <!-- Widget AI Assistant -->
+    <div class="ai-assistant-widget">
+        <!-- Botón flotante -->
+        <button class="ai-assistant-button minimized" id="aiAssistantButton">
+            🤖
+        </button>
+
+        <!-- Container del chat -->
+        <div class="ai-chat-container" id="aiChatContainer">
+            <div class="ai-chat-header">
+                <div class="ai-chat-title">
+                    🤖 Asistente IA - Documentación
+                </div>
+                <button class="ai-close-button" id="aiCloseButton">✕</button>
+            </div>
+
+            <div class="ai-chat-messages" id="aiChatMessages">
+                <div class="message bot">
+                    <div class="message-bubble">
+                        ¡Hola! 👋 Soy tu asistente de IA para la documentación de la API de Gestión de Órdenes. Puedes preguntarme cualquier cosa sobre los endpoints, parámetros, ejemplos de uso y más. ¿En qué puedo ayudarte hoy?
+                    </div>
+                    <div class="message-time">Ahora</div>
+                </div>
+            </div>
+
+            <div class="loading-indicator" id="loadingIndicator">
+                <span class="loading-dots">Procesando tu pregunta</span>
+            </div>
+
+            <div class="ai-chat-input-area">
+                <div class="ai-input-container">
+                    <textarea 
+                        class="ai-input-field" 
+                        id="aiInputField" 
+                        placeholder="Escribe tu pregunta sobre la API..." 
+                        rows="1"
+                    ></textarea>
+                    <button class="ai-send-button" id="aiSendButton">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Tu estructura HTML original aquí -->
+    <div class="header">
+        <div class="logo">
+            <!-- Logo se generará automáticamente -->
+        </div>
+        <div class="header-actions">
+            <input type="text" class="search-box" placeholder="Buscar">
+            <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="sidebar">
+            <!-- Sidebar se generará automáticamente -->
+        </div>
+        
+        <div class="main-content">
+            <!-- Contenido principal se generará automáticamente -->
+        </div>
+    </div>
+
+    <div class="code-sidebar">
+        
+        <div class="section-urls" style="margin-top: 50px;">
+          <div class="response-header">
+            <span class="response-text">Servicios web</span>
+          </div>
+          <div class="response-content">
+            <!-- Lista de endpoints -->
+        </div>
+        <!-- Code sidebar se generará automáticamente -->
+    </div>
+</div>
+
+</body>
+</html>
