@@ -6,6 +6,7 @@
 class APIDocGenerator {
     constructor() {
         this.config = null;
+        this.lastActiveSectionId = null;
     }
 
     /**
@@ -1425,14 +1426,32 @@ class APIDocGenerator {
             });
         });
 
-        // Scroll listener to update active item
+        // Optimized scroll listener with immediate response and debounced URL update
         let scrollTimeout;
+        let isNavigating = false;
+        
         window.addEventListener('scroll', () => {
+            // Immediate content update for better responsiveness
+            if (!isNavigating) {
+                this.updateActiveItemOnScroll(sidebarItems, sections, true);
+            }
+            
+            // Debounced URL update to avoid excessive history changes
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => {
-                this.updateActiveItemOnScroll(sidebarItems, sections);
-            }, 50);
+                if (!isNavigating) {
+                    this.updateActiveItemOnScroll(sidebarItems, sections, false, true);
+                }
+            }, 100);
         });
+        
+        // Helper to control navigation state
+        this.setNavigatingState = (state) => {
+            isNavigating = state;
+            if (state) {
+                setTimeout(() => { isNavigating = false; }, 500);
+            }
+        };
         
         // Handle browser back/forward navigation
         window.addEventListener('popstate', () => {
@@ -1674,8 +1693,17 @@ class APIDocGenerator {
         
         const section = document.getElementById(sectionId);
         if (section) {
+            // Set navigating state to prevent scroll interference
+            if (this.setNavigatingState) {
+                this.setNavigatingState(true);
+            }
+            
             // Update URL hash
             window.history.pushState(null, null, `#${sectionId}`);
+            
+            // Immediately update dynamic content for instant response
+            this.updateDynamicContentDisplay(sectionId);
+            this.lastActiveSectionId = sectionId;
             
             const headerOffset = 80;
             const elementPosition = section.getBoundingClientRect().top;
@@ -1695,6 +1723,7 @@ class APIDocGenerator {
             
             console.log(`🚀 Scroll initiated to section: ${sectionId}`);
             console.log(`🔗 URL updated with hash: #${sectionId}`);
+            console.log(`👁️ Dynamic content updated immediately`);
         } else {
             console.error(`⚠️ Section not found with ID: "${sectionId}"`);
         }
@@ -1703,33 +1732,67 @@ class APIDocGenerator {
     /**
      * Actualiza item activo en scroll
      */
-    updateActiveItemOnScroll(sidebarItems, sections) {
+    updateActiveItemOnScroll(sidebarItems, sections, immediateUpdate = false, updateUrl = false) {
         let currentSectionId = '';
+        let bestSection = null;
+        let bestDistance = Infinity;
+        
+        // Improved section detection - find the section closest to viewport center
+        const viewportCenter = window.innerHeight / 2;
         
         sections.forEach(section => {
             const rect = section.getBoundingClientRect();
-            if (rect.top <= 150 && rect.bottom >= 150) {
-                currentSectionId = section.id;
+            const sectionCenter = rect.top + (rect.height / 2);
+            const distance = Math.abs(sectionCenter - viewportCenter);
+            
+            // Section is in viewport and closer to center
+            if (rect.top <= viewportCenter && rect.bottom >= viewportCenter) {
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    bestSection = section;
+                    currentSectionId = section.id;
+                }
             }
         });
         
-        if (currentSectionId) {
-            // Update URL hash only if it's different from current hash
-            const currentHash = window.location.hash.substring(1);
-            if (currentHash !== currentSectionId) {
-                window.history.replaceState(null, null, `#${currentSectionId}`);
+        // Fallback: if no section in center, use the topmost visible section
+        if (!currentSectionId) {
+            sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top <= 150 && rect.bottom >= 150) {
+                    currentSectionId = section.id;
+                }
+            });
+        }
+        
+        if (currentSectionId && currentSectionId !== this.lastActiveSectionId) {
+            console.log(`🎯 Active section changed to: ${currentSectionId}`);
+            
+            // Update URL hash only if requested and different from current hash
+            if (updateUrl) {
+                const currentHash = window.location.hash.substring(1);
+                if (currentHash !== currentSectionId) {
+                    window.history.replaceState(null, null, `#${currentSectionId}`);
+                }
             }
             
+            // Always update dynamic content immediately for responsiveness
             this.updateDynamicContentDisplay(currentSectionId);
             
+            // Update sidebar active state
             sidebarItems.forEach(item => {
                 item.classList.remove('active');
                 const targetId = item.getAttribute('data-target');
                 if (targetId === currentSectionId) {
                     item.classList.add('active');
-                    this.scrollSidebarToActive(item);
+                    // Only scroll sidebar on immediate updates to avoid conflicts
+                    if (immediateUpdate) {
+                        this.scrollSidebarToActive(item);
+                    }
                 }
             });
+            
+            this.lastActiveSectionId = currentSectionId;
         }
     }
 

@@ -309,8 +309,20 @@ function navigateToEndpoint(path, method) {
     if (section) {
         console.log(`✅ Found section, scrolling to: ${sectionId}`);
         
+        // Set navigating state in generator if available
+        if (typeof generator !== 'undefined' && generator.setNavigatingState) {
+            generator.setNavigatingState(true);
+        }
+        
         // Update URL hash
         window.history.pushState(null, null, `#${sectionId}`);
+        
+        // Immediately update dynamic content via generator if available
+        if (typeof generator !== 'undefined' && generator.updateDynamicContentDisplay) {
+            generator.updateDynamicContentDisplay(sectionId);
+            generator.lastActiveSectionId = sectionId;
+            console.log(`👁️ Dynamic content updated immediately via generator`);
+        }
         
         const headerOffset = 80;
         const elementPosition = section.getBoundingClientRect().top;
@@ -403,6 +415,18 @@ function scrollToSectionById(sectionId) {
     if (section) {
         console.log(`✅ Found section: ${sectionId}`);
         
+        // Set navigating state in generator if available
+        if (typeof generator !== 'undefined' && generator.setNavigatingState) {
+            generator.setNavigatingState(true);
+        }
+        
+        // Immediately update dynamic content via generator if available
+        if (typeof generator !== 'undefined' && generator.updateDynamicContentDisplay) {
+            generator.updateDynamicContentDisplay(sectionId);
+            generator.lastActiveSectionId = sectionId;
+            console.log(`👁️ Dynamic content updated immediately via generator`);
+        }
+        
         const headerOffset = 80;
         const elementPosition = section.getBoundingClientRect().top;
         const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
@@ -421,11 +445,6 @@ function scrollToSectionById(sectionId) {
         
         // Update sidebar active state
         updateSidebarActiveState(sectionId);
-        
-        // Trigger dynamic content update if available
-        if (typeof updateDynamicContentDisplay === 'function') {
-            updateDynamicContentDisplay(sectionId);
-        }
         
         return true;
     } else {
