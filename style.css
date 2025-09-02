@@ -228,10 +228,7 @@ body.dark-mode .auth-button:hover {
     margin: 5px;
     border-radius: 5px;
     padding: 10px 0;
-    overflow-y: auto;
     transition: all 0.3s ease;
-    position:fixed;
-    margin-top:55px;
 }
 
 body.dark-mode .sidebar {
@@ -278,7 +275,11 @@ body.dark-mode .sidebar-version {
 }
 
 .sidebar-section {
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+.sidebar-section:last-child {
+    margin-bottom: 30px; /* Margen extra para la última sección */
 }
 
 .sidebar-section-title {
@@ -1695,15 +1696,17 @@ body.dark-mode .inline-link {
 
 /* Sidebar Scroll Functionality */
 .sidebar {
-    height: 100vh;
+    height: calc(100vh - 60px); /* Resta altura del header + margen */
     overflow-y: auto;
     overflow-x: hidden;
     scroll-behavior: smooth;
     position: fixed;
-    top: 0;
+    top: 60px; /* Altura estimada del header */
     left: 0;
-    width: 280px; /* Adjust based on your design */
+    width: 280px;
     z-index: 100;
+    padding-bottom: 50px; /* Espacio generoso en el bottom */
+    box-sizing: border-box; /* Incluir padding en el cálculo de altura */
 }
 
 /* Custom scrollbar for sidebar */
@@ -1785,7 +1788,11 @@ body.dark-mode .inline-link {
 .sidebar-item {
     transition: all 0.2s ease;
     border-radius: 4px;
-    margin: 2px 0;
+    margin: 4px 0;
+}
+
+.sidebar-item:last-child {
+    margin-bottom: 20px; /* Espacio extra para el último item */
 }
 
 .sidebar-item:hover {
