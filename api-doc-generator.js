@@ -874,9 +874,18 @@ class APIDocGenerator {
         codeBlock.className = 'code-block';
 
         const curlBlock = this.generateCurlExample(path, method, operation);
-        curlBlock.classList.add('code-content', 'active');
-        curlBlock.setAttribute('data-lang', 'curl');
-        codeBlock.appendChild(curlBlock);
+        console.log('🔍 curlBlock generated:', curlBlock);
+        console.log('🔍 curlBlock is null?', curlBlock === null);
+        console.log('🔍 curlBlock content:', curlBlock?.innerHTML?.substring(0, 100));
+        
+        if (curlBlock) {
+            curlBlock.classList.add('code-content', 'active');
+            curlBlock.setAttribute('data-lang', 'curl');
+            codeBlock.appendChild(curlBlock);
+            console.log('✅ cURL block added to codeBlock');
+        } else {
+            console.error('❌ curlBlock is null! Cannot add to DOM');
+        }
 
         const jsBlock = this.generateJSExample(path, method, operation);
         jsBlock.classList.add('code-content');
@@ -904,10 +913,55 @@ class APIDocGenerator {
         langSelector.addEventListener('click', (e) => {
             if (e.target.classList.contains('lang-tab')) {
                 const lang = e.target.getAttribute('data-lang');
-                Array.from(langSelector.querySelectorAll('.lang-tab')).forEach(btn => btn.classList.remove('active'));
+                console.log(`🔄 Switching to tab: ${lang}`);
+                
+                // Remove active from all tabs
+                Array.from(langSelector.querySelectorAll('.lang-tab')).forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Add active to clicked tab
                 e.target.classList.add('active');
-                Array.from(codeBlock.querySelectorAll('.code-content')).forEach(block => {
-                    block.classList.toggle('active', block.getAttribute('data-lang') === lang);
+                console.log(`✅ Tab activated: ${lang}`);
+                
+                // Switch code content
+                const codeBlocks = Array.from(codeBlock.querySelectorAll('.code-content'));
+                console.log(`📊 Found ${codeBlocks.length} code blocks`);
+                
+                codeBlocks.forEach((block, index) => {
+                    const blockLang = block.getAttribute('data-lang');
+                    const shouldBeActive = blockLang === lang;
+                    
+                    console.log(`Block ${index}: element=`, block);
+                    console.log(`Block ${index}: lang="${blockLang}", shouldBeActive=${shouldBeActive}`);
+                    console.log(`Block ${index}: is null?`, block === null);
+                    console.log(`Block ${index}: className="${block?.className}"`);
+                    
+                    if (!block) {
+                        console.error(`❌ Block ${index} is null!`);
+                        return;
+                    }
+                    
+                    // Remove active class
+                    block.classList.remove('active');
+                    
+                    // Add active class if it matches
+                    if (shouldBeActive) {
+                        block.classList.add('active');
+                        console.log(`✅ Activated block for ${blockLang}`);
+                        
+                        // Verify the block has content
+                        const hasContent = block.children.length > 0 || block.textContent.trim().length > 0;
+                        console.log(`📝 Block has content: ${hasContent}`);
+                        console.log(`📝 Block children count: ${block.children.length}`);
+                        console.log(`📝 Block textContent length: ${block.textContent.trim().length}`);
+                        
+                        if (hasContent && block.children.length > 0) {
+                            console.log(`📄 Block content preview:`, block.innerHTML.substring(0, 100) + '...');
+                        } else {
+                            console.warn(`⚠️ Block ${blockLang} has no content!`);
+                        }
+                    }
                 });
             }
             if (e.target.closest('.copy-button')) {
@@ -933,13 +987,11 @@ class APIDocGenerator {
      * Genera ejemplo cURL
      */
     generateCurlExample(path, method, operation) {
+        console.log(`📝 Generating cURL example for ${method.toUpperCase()} ${path}`);
+        
         const codeBlock = document.createElement('div');
-        codeBlock.className = 'code-block';
-
-        const codeContent = document.createElement('div');
-        codeContent.className = 'code-content active';
-
-        const baseUrl = this.config.servers?.[0]?.url || 'https://api.example.com';
+        const baseUrl = this.config?.servers?.[0]?.url || 'https://api.example.com';
+        
         let curlCommand = `curl -X ${method.toUpperCase()} "${baseUrl}${path}"`;
 
         // Headers
@@ -953,25 +1005,7 @@ class APIDocGenerator {
             curlCommand += '\n  -d @/request.json';
         }
 
-        const lines = curlCommand.split('\n');
-        lines.forEach((line, index) => {
-            const codeLine = document.createElement('div');
-            codeLine.className = 'code-line';
-            
-            const lineNumber = document.createElement('span');
-            lineNumber.className = 'line-number';
-            lineNumber.textContent = index + 1;
-            
-            const codeText = document.createElement('span');
-            codeText.className = 'code-text';
-            codeText.innerHTML = this.formatCurlLine(line);
-            
-            codeLine.appendChild(lineNumber);
-            codeLine.appendChild(codeText);
-            codeContent.appendChild(codeLine);
-        });
-
-        codeBlock.appendChild(codeContent);
+        codeBlock.innerHTML = this.formatCodeBlock(curlCommand, 'curl');
         return codeBlock;
     }
 
@@ -1056,7 +1090,10 @@ class APIDocGenerator {
      * Highlight code using Highlight.js
      */
     highlightSyntax(code, lang) {
+        console.log(`🔍 highlightSyntax called with code length: ${code?.length}, lang: ${lang}`);
+        
         if (!code || typeof code !== 'string') {
+            console.log(`⚠️ highlightSyntax: invalid code input, returning empty string`);
             return '';
         }
         
@@ -1072,18 +1109,35 @@ class APIDocGenerator {
         };
         
         const hljsLang = langMap[lang] || lang;
+        console.log(`🔍 Mapped language: ${lang} → ${hljsLang}`);
         
         try {
-            // Use Highlight.js to highlight the code
-            if (window.hljs && window.hljs.highlight) {
-                const result = window.hljs.highlight(code, { language: hljsLang });
-                return result.value;
-            } else {
-                // Fallback if Highlight.js is not loaded
+            // Check if Highlight.js is available
+            if (typeof window === 'undefined') {
+                console.warn('⚠️ Window object not available');
                 return code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             }
+            
+            if (!window.hljs) {
+                console.warn('⚠️ Highlight.js not loaded on window');
+                return code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+            
+            if (!window.hljs.highlight) {
+                console.warn('⚠️ Highlight.js highlight function not available');
+                return code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+            
+            // Use Highlight.js to highlight the code
+            console.log(`🔍 Calling hljs.highlight with language: ${hljsLang}`);
+            const result = window.hljs.highlight(code, { language: hljsLang });
+            console.log(`🔍 hljs.highlight result:`, result);
+            console.log(`🔍 hljs.highlight result.value:`, result?.value);
+            
+            return result?.value || code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
         } catch (error) {
-            console.warn('Error highlighting code:', error);
+            console.warn('❌ Error highlighting code:', error);
+            console.log('🔧 Falling back to escaped HTML');
             return code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
     }
@@ -1113,11 +1167,18 @@ class APIDocGenerator {
      * Formatea una línea de cURL (usando Highlight.js)
      */
     formatCurlLine(line) {
+        console.log(`🔍 formatCurlLine called with:`, line);
+        
         if (!line || typeof line !== 'string') {
+            console.log(`⚠️ formatCurlLine: invalid input, returning empty string`);
             return '';
         }
         
-        return this.highlightSyntax(line, 'bash');
+        const result = this.highlightSyntax(line, 'bash');
+        console.log(`🔍 formatCurlLine result:`, result);
+        console.log(`🔍 formatCurlLine result is null?`, result === null);
+        
+        return result || line; // Fallback to original line if highlighting fails
     }
 
     /**

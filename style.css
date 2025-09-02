@@ -823,18 +823,6 @@ body.dark-mode .property-description {
     max-height: 350px;
 }
 /* Hide all code contents by default, show only active */
-.code-content {
-    display: none;
-    padding: 16px 18px 16px 18px;
-    overflow-x: auto;
-    overflow-y: auto;
-    white-space: pre;
-    max-width: 100%;
-    max-height: 320px;
-}
-.code-content.active {
-    display: block;
-}
 .code-string {
     color: #068534;
 }
@@ -1105,14 +1093,6 @@ body.dark-mode .response-header {
 
 
 /* Code Content Visibility */
-.code-content {
-    display: none;
-    padding: 16px 0;
-}
-
-.code-content.active {
-    display: block;
-}
 
 /* Additional Syntax Highlighting */
 .code-keyword {
@@ -3244,24 +3224,33 @@ body.dark-mode .code-block {
     background: #1a202c;
 }
 
-/* Code Content */
+/* Code Content - Unified Definition */
 .code-content {
+    /* Layout */
     flex: 1;
-    overflow-x: auto !important;
-    overflow-y: auto !important;
+    display: none; /* Hidden by default */
     padding: 0;
     margin: 0;
+    
+    /* Scrolling */
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    min-height: 0; /* Important for flex children to scroll */
+    max-height: none; /* Remove any max-height restrictions */
+    
+    /* Typography */
     font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
     font-size: 12px;
     line-height: 1.4;
-    background: inherit;
-    min-height: 0; /* Important for flex children to scroll */
-    max-height: none; /* Remove any max-height restrictions */
     white-space: nowrap; /* Allow horizontal scroll for long lines */
+    
+    /* Theming */
+    background: inherit;
 }
 
-.code-content:not(.active) {
-    display: none;
+/* Show only active content */
+.code-content.active {
+    display: block !important;
 }
 
 /* Code Lines */
