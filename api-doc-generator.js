@@ -2293,13 +2293,29 @@ class APIDocGenerator {
         const hasValidToken = this.getValidAccessToken() !== null;
         const indicators = document.querySelectorAll('.sso-token-indicator');
         
-        indicators.forEach(indicator => {
+        indicators.forEach((indicator, index) => {
+            const indicatorId = `token-indicator-${index}`;
+            indicator.setAttribute('data-indicator-id', indicatorId);
+            
             if (hasValidToken) {
+                const tokenInfo = this.getTokenInfo();
+                const isManual = tokenInfo && tokenInfo.isManual;
                 indicator.className = 'sso-token-indicator valid';
-                indicator.innerHTML = '🔑 Usando token SSO automáticamente';
+                indicator.innerHTML = `
+                    🔑 Usando token ${isManual ? 'manual' : 'SSO automático'}
+                    <span class="token-options">
+                        | <a href="#" onclick="generator.showManualTokenInput('${indicatorId}'); return false;">Token manual</a>
+                    </span>
+                `;
             } else {
                 indicator.className = 'sso-token-indicator invalid';
-                indicator.innerHTML = '⚠️ Token SSO no disponible - <a href="#sso">Obtener token</a>';
+                indicator.innerHTML = `
+                    ⚠️ Token no disponible
+                    <span class="token-options">
+                        - <a href="#sso">Obtener SSO</a> | 
+                        <a href="#" onclick="generator.showManualTokenInput('${indicatorId}'); return false;">Token manual</a>
+                    </span>
+                `;
             }
         });
         
@@ -2462,9 +2478,9 @@ class APIDocGenerator {
     }
 
     /**
-     * Obtiene el access token válido del localStorage
+     * Obtiene información completa del token del localStorage
      */
-    getValidAccessToken() {
+    getTokenInfo() {
         const tokenData = localStorage.getItem('sso_token');
         if (!tokenData) {
             return null;
@@ -2476,15 +2492,30 @@ class APIDocGenerator {
             const isExpired = Date.now() > expiresAt.getTime();
             
             if (isExpired) {
-                console.warn('SSO token has expired');
+                console.warn('Token has expired');
                 return null;
             }
             
-            return token.access_token;
+            return {
+                access_token: token.access_token,
+                expires_at: expiresAt,
+                expires_in: token.expires_in,
+                token_type: token.token_type || 'Bearer',
+                isManual: token.isManual || false,
+                timestamp: token.timestamp
+            };
         } catch (error) {
-            console.error('Error parsing SSO token:', error);
+            console.error('Error parsing token:', error);
             return null;
         }
+    }
+
+    /**
+     * Obtiene el access token válido del localStorage
+     */
+    getValidAccessToken() {
+        const tokenInfo = this.getTokenInfo();
+        return tokenInfo ? tokenInfo.access_token : null;
     }
 
     /**
@@ -2562,6 +2593,181 @@ class APIDocGenerator {
         setTimeout(() => {
             notification.classList.remove('show');
         }, 3000);
+    }
+
+    /**
+     * Muestra el input modal para token manual
+     */
+    showManualTokenInput(indicatorId) {
+        // Crear modal si no existe
+        let modal = document.getElementById('manual-token-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'manual-token-modal';
+            modal.className = 'manual-token-modal';
+            document.body.appendChild(modal);
+        }
+
+        modal.innerHTML = `
+            <div class="manual-token-overlay" onclick="this.parentElement.style.display='none'"></div>
+            <div class="manual-token-content">
+                <div class="manual-token-header">
+                    <h3>🔑 Token Manual</h3>
+                    <button class="close-btn" onclick="document.getElementById('manual-token-modal').style.display='none'">✕</button>
+                </div>
+                
+                <div class="manual-token-body">
+                    <p>Pegue su access token JWT aquí:</p>
+                    <textarea 
+                        id="manual-token-input" 
+                        class="manual-token-textarea"
+                        placeholder="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        rows="4"
+                    ></textarea>
+                    
+                    <div class="token-validation" id="token-validation"></div>
+                </div>
+                
+                <div class="manual-token-actions">
+                    <button class="btn-secondary" onclick="document.getElementById('manual-token-modal').style.display='none'">
+                        Cancelar
+                    </button>
+                    <button class="btn-primary" onclick="generator.validateAndSaveManualToken()">
+                        Validar y Guardar
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Mostrar modal
+        modal.style.display = 'flex';
+        
+        // Enfocar el textarea
+        setTimeout(() => {
+            document.getElementById('manual-token-input').focus();
+        }, 100);
+
+        // Validar en tiempo real mientras se escribe
+        const textarea = document.getElementById('manual-token-input');
+        textarea.addEventListener('input', () => {
+            this.validateTokenFormat(textarea.value);
+        });
+    }
+
+    /**
+     * Valida el formato del token en tiempo real
+     */
+    validateTokenFormat(token) {
+        const validationDiv = document.getElementById('token-validation');
+        
+        if (!token.trim()) {
+            validationDiv.innerHTML = '';
+            return;
+        }
+
+        try {
+            // Validar que sea un JWT válido
+            const parts = token.split('.');
+            if (parts.length !== 3) {
+                throw new Error('Token JWT debe tener 3 partes separadas por puntos');
+            }
+
+            // Decodificar el payload
+            const payload = JSON.parse(atob(parts[1]));
+            const now = Math.floor(Date.now() / 1000);
+            
+            let status = '';
+            let className = '';
+
+            // Verificar expiración
+            if (payload.exp) {
+                const expiresAt = new Date(payload.exp * 1000);
+                const isExpired = now > payload.exp;
+                
+                if (isExpired) {
+                    status = `❌ Token expirado el ${expiresAt.toLocaleString()}`;
+                    className = 'validation-error';
+                } else {
+                    status = `✅ Token válido hasta ${expiresAt.toLocaleString()}`;
+                    className = 'validation-success';
+                }
+            } else {
+                status = '⚠️ Token sin fecha de expiración';
+                className = 'validation-warning';
+            }
+
+            // Mostrar información adicional
+            if (payload.iss) status += `<br>📋 Emisor: ${payload.iss}`;
+            if (payload.sub) status += `<br>👤 Usuario: ${payload.sub}`;
+            if (payload.aud) status += `<br>🎯 Audiencia: ${payload.aud}`;
+
+            validationDiv.className = `token-validation ${className}`;
+            validationDiv.innerHTML = status;
+
+        } catch (error) {
+            validationDiv.className = 'token-validation validation-error';
+            validationDiv.innerHTML = `❌ Token inválido: ${error.message}`;
+        }
+    }
+
+    /**
+     * Valida y guarda el token manual
+     */
+    validateAndSaveManualToken() {
+        const token = document.getElementById('manual-token-input').value.trim();
+        const validationDiv = document.getElementById('token-validation');
+
+        if (!token) {
+            validationDiv.className = 'token-validation validation-error';
+            validationDiv.innerHTML = '❌ Por favor ingrese un token';
+            return;
+        }
+
+        try {
+            // Validar JWT
+            const parts = token.split('.');
+            if (parts.length !== 3) {
+                throw new Error('Formato de token JWT inválido');
+            }
+
+            const payload = JSON.parse(atob(parts[1]));
+            const now = Math.floor(Date.now() / 1000);
+
+            // Verificar que no esté expirado
+            if (payload.exp && now > payload.exp) {
+                throw new Error('El token ha expirado');
+            }
+
+            // Calcular expires_in
+            const expiresIn = payload.exp ? (payload.exp - now) : 3600; // Default 1 hora si no tiene exp
+
+            // Guardar token como manual
+            const tokenData = {
+                access_token: token,
+                expires_in: expiresIn,
+                token_type: 'Bearer',
+                timestamp: Date.now(),
+                isManual: true // Marcar como token manual
+            };
+
+            localStorage.setItem('sso_token', JSON.stringify(tokenData));
+
+            // Actualizar UI
+            this.updateAllTokenIndicators();
+            this.updateTokenInfo(); // Si estamos en la sección SSO
+
+            // Cerrar modal
+            document.getElementById('manual-token-modal').style.display = 'none';
+
+            // Mostrar notificación
+            this.showCopyNotification('Token manual guardado exitosamente', 'success');
+
+            console.log('✅ Manual token saved successfully');
+
+        } catch (error) {
+            validationDiv.className = 'token-validation validation-error';
+            validationDiv.innerHTML = `❌ Error: ${error.message}`;
+        }
     }
 }
 
