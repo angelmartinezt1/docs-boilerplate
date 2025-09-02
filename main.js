@@ -49,7 +49,19 @@ function initializeSearchModal() {
         console.log('Documentation generated, reloading search endpoints...');
         setTimeout(() => {
             loadSearchEndpoints();
+            
+            // Check if there's a hash in the URL to navigate to
+            handleInitialHashNavigation();
         }, 100);
+    });
+    
+    // Handle browser back/forward navigation
+    window.addEventListener('popstate', function(e) {
+        const hash = window.location.hash;
+        if (hash && hash.startsWith('#')) {
+            const sectionId = hash.substring(1);
+            scrollToSectionById(sectionId);
+        }
     });
 }
 
@@ -286,34 +298,139 @@ function selectResult(index) {
 }
 
 function navigateToEndpoint(path, method) {
-    // Generate section ID based on path and method
-    const sectionId = path.replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') + '-' + method.toLowerCase();
+    // Use the same ID generation logic as the api-doc-generator.js
+    const sectionId = generateOperationId(path, method);
+    
+    console.log(`🔍 Navigating to endpoint: ${method.toUpperCase()} ${path}`);
+    console.log(`🎯 Generated section ID: "${sectionId}"`);
     
     // Try to find and scroll to the section
     const section = document.getElementById(sectionId);
     if (section) {
-        section.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
+        console.log(`✅ Found section, scrolling to: ${sectionId}`);
+        
+        // Update URL hash
+        window.history.pushState(null, null, `#${sectionId}`);
+        
+        const headerOffset = 80;
+        const elementPosition = section.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
         });
         
         // Highlight the section briefly
         section.style.background = '#fffbf0';
+        section.style.transition = 'background-color 0.3s ease';
         setTimeout(() => {
             section.style.background = '';
         }, 2000);
+        
+        // Update sidebar active state
+        updateSidebarActiveState(sectionId);
     } else {
+        console.warn(`⚠️ Section not found with ID: "${sectionId}"`);
+        console.log('🔍 Available sections:', Array.from(document.querySelectorAll('.section[id]')).map(s => s.id));
+        
         // Fallback: try to find by text content
-        const elements = document.querySelectorAll('.content-title, .section-title');
+        const elements = document.querySelectorAll('.content-title, .section-title, h2');
         for (let element of elements) {
-            if (element.textContent.includes(path) || element.textContent.includes(method)) {
-                element.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
+            const text = element.textContent;
+            if (text.includes(path) || text.includes(method.toUpperCase()) || 
+                (text.toLowerCase().includes(path.replace(/\//g, '').toLowerCase()) && text.includes(method.toUpperCase()))) {
+                
+                console.log(`🔄 Fallback: scrolling to element with text: "${text}"`);
+                
+                const headerOffset = 80;
+                const elementPosition = element.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
                 });
+                
+                // Highlight the element briefly
+                element.style.background = '#fffbf0';
+                element.style.transition = 'background-color 0.3s ease';
+                setTimeout(() => {
+                    element.style.background = '';
+                }, 2000);
+                
                 break;
             }
         }
+    }
+}
+
+// Helper function to generate operation ID (matches api-doc-generator.js)
+function generateOperationId(path, method) {
+    return `${method.toLowerCase()}-${path.replace(/[^a-zA-Z0-9]/g, '-')}`;
+}
+
+// Helper function to update sidebar active state
+function updateSidebarActiveState(sectionId) {
+    const sidebarItems = document.querySelectorAll('.sidebar-item[data-target]');
+    sidebarItems.forEach(item => {
+        item.classList.remove('active');
+        if (item.getAttribute('data-target') === sectionId) {
+            item.classList.add('active');
+        }
+    });
+}
+
+// Handle initial navigation from URL hash
+function handleInitialHashNavigation() {
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#')) {
+        const sectionId = hash.substring(1);
+        console.log(`🔗 Initial hash navigation to: ${sectionId}`);
+        
+        // Wait a bit more for DOM to be fully ready
+        setTimeout(() => {
+            scrollToSectionById(sectionId);
+        }, 200);
+    }
+}
+
+// Scroll to section by ID with proper handling
+function scrollToSectionById(sectionId) {
+    console.log(`🎯 Scrolling to section ID: ${sectionId}`);
+    
+    const section = document.getElementById(sectionId);
+    if (section) {
+        console.log(`✅ Found section: ${sectionId}`);
+        
+        const headerOffset = 80;
+        const elementPosition = section.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+        });
+        
+        // Highlight the section briefly
+        section.style.background = '#fffbf0';
+        section.style.transition = 'background-color 0.3s ease';
+        setTimeout(() => {
+            section.style.background = '';
+        }, 2000);
+        
+        // Update sidebar active state
+        updateSidebarActiveState(sectionId);
+        
+        // Trigger dynamic content update if available
+        if (typeof updateDynamicContentDisplay === 'function') {
+            updateDynamicContentDisplay(sectionId);
+        }
+        
+        return true;
+    } else {
+        console.warn(`⚠️ Section not found: ${sectionId}`);
+        return false;
     }
 }
 
