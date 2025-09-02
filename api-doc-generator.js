@@ -96,6 +96,11 @@ class APIDocGenerator {
         });
         document.dispatchEvent(event);
         
+        // Handle initial URL hash navigation
+        setTimeout(() => {
+            this.handleInitialHashNavigation();
+        }, 300);
+        
         // Si existe toggleTheme en el scope global, preservarlo
         if (typeof window.toggleTheme === 'function') {
             console.log('✅ Theme toggle function preserved');
@@ -1428,6 +1433,28 @@ class APIDocGenerator {
                 this.updateActiveItemOnScroll(sidebarItems, sections);
             }, 50);
         });
+        
+        // Handle browser back/forward navigation
+        window.addEventListener('popstate', () => {
+            const hash = window.location.hash;
+            if (hash && hash.startsWith('#')) {
+                const sectionId = hash.substring(1);
+                console.log(`🔄 Popstate navigation to: ${sectionId}`);
+                this.scrollToSection(sectionId);
+                
+                // Update sidebar active state
+                sidebarItems.forEach(item => {
+                    item.classList.remove('active');
+                    if (item.getAttribute('data-target') === sectionId) {
+                        item.classList.add('active');
+                        this.scrollSidebarToActive(item);
+                    }
+                });
+                
+                // Update dynamic content
+                this.updateDynamicContentDisplay(sectionId);
+            }
+        });
     }
 
     /**
@@ -1647,6 +1674,9 @@ class APIDocGenerator {
         
         const section = document.getElementById(sectionId);
         if (section) {
+            // Update URL hash
+            window.history.pushState(null, null, `#${sectionId}`);
+            
             const headerOffset = 80;
             const elementPosition = section.getBoundingClientRect().top;
             const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
@@ -1656,7 +1686,15 @@ class APIDocGenerator {
                 behavior: 'smooth'
             });
             
-            console.log('🚀 Scroll initiated');
+            // Highlight the section briefly
+            section.style.background = '#fffbf0';
+            section.style.transition = 'background-color 0.3s ease';
+            setTimeout(() => {
+                section.style.background = '';
+            }, 2000);
+            
+            console.log(`🚀 Scroll initiated to section: ${sectionId}`);
+            console.log(`🔗 URL updated with hash: #${sectionId}`);
         } else {
             console.error(`⚠️ Section not found with ID: "${sectionId}"`);
         }
@@ -1676,6 +1714,12 @@ class APIDocGenerator {
         });
         
         if (currentSectionId) {
+            // Update URL hash only if it's different from current hash
+            const currentHash = window.location.hash.substring(1);
+            if (currentHash !== currentSectionId) {
+                window.history.replaceState(null, null, `#${currentSectionId}`);
+            }
+            
             this.updateDynamicContentDisplay(currentSectionId);
             
             sidebarItems.forEach(item => {
@@ -1686,6 +1730,35 @@ class APIDocGenerator {
                     this.scrollSidebarToActive(item);
                 }
             });
+        }
+    }
+
+    /**
+     * Handle initial navigation from URL hash
+     */
+    handleInitialHashNavigation() {
+        const hash = window.location.hash;
+        if (hash && hash.startsWith('#')) {
+            const sectionId = hash.substring(1);
+            console.log(`🔗 Generator handling initial hash navigation to: ${sectionId}`);
+            
+            // Wait a bit more for DOM to be fully ready
+            setTimeout(() => {
+                this.scrollToSection(sectionId);
+                
+                // Update sidebar active state
+                const sidebarItems = document.querySelectorAll('.sidebar-item[data-target]');
+                sidebarItems.forEach(item => {
+                    item.classList.remove('active');
+                    if (item.getAttribute('data-target') === sectionId) {
+                        item.classList.add('active');
+                        this.scrollSidebarToActive(item);
+                    }
+                });
+                
+                // Update dynamic content
+                this.updateDynamicContentDisplay(sectionId);
+            }, 100);
         }
     }
 
