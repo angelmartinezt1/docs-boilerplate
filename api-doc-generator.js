@@ -2186,6 +2186,9 @@ class APIDocGenerator {
                 
                 this.updateTokenInfo();
                 
+                // Actualizar todos los indicadores de token en la página
+                this.updateAllTokenIndicators();
+                
             } else {
                 throw new Error(result.error_description || result.error || 'Error desconocido');
             }
@@ -2237,6 +2240,9 @@ class APIDocGenerator {
             
             // Restaurar valores por defecto
             this.loadSSOData();
+            
+            // Actualizar todos los indicadores de token en la página
+            this.updateAllTokenIndicators();
         }
     }
 
@@ -2278,6 +2284,181 @@ class APIDocGenerator {
                 console.error('Error displaying token info:', e);
             }
         }
+    }
+
+    /**
+     * Actualiza todos los indicadores de token SSO en la página
+     */
+    updateAllTokenIndicators() {
+        const hasValidToken = this.getValidAccessToken() !== null;
+        const indicators = document.querySelectorAll('.sso-token-indicator');
+        
+        indicators.forEach(indicator => {
+            if (hasValidToken) {
+                indicator.className = 'sso-token-indicator valid';
+                indicator.innerHTML = '🔑 Usando token SSO automáticamente';
+            } else {
+                indicator.className = 'sso-token-indicator invalid';
+                indicator.innerHTML = '⚠️ Token SSO no disponible - <a href="#sso">Obtener token</a>';
+            }
+        });
+        
+        console.log(`📊 Updated ${indicators.length} token indicators`);
+        
+        // También actualizar los ejemplos de código en los sidebars
+        this.updateAllCodeExamples();
+    }
+
+    /**
+     * Actualiza todos los ejemplos de código en los sidebars
+     */
+    updateAllCodeExamples() {
+        // Buscar todos los code-content activos y regenerarlos
+        const activeCodeContents = document.querySelectorAll('.code-content[data-lang]');
+        activeCodeContents.forEach(codeContent => {
+            const lang = codeContent.getAttribute('data-lang');
+            const sectionId = this.findParentSectionId(codeContent);
+            
+            if (sectionId && lang) {
+                this.regenerateCodeExample(codeContent, lang, sectionId);
+            }
+        });
+        
+        console.log(`🔄 Updated ${activeCodeContents.length} code examples`);
+    }
+
+    /**
+     * Encuentra el ID de la sección padre de un elemento
+     */
+    findParentSectionId(element) {
+        let current = element;
+        while (current && current !== document.body) {
+            if (current.classList.contains('section') && current.id) {
+                return current.id;
+            }
+            current = current.parentElement;
+        }
+        return null;
+    }
+
+    /**
+     * Regenera un ejemplo de código específico
+     */
+    regenerateCodeExample(codeContent, lang, sectionId) {
+        // Buscar la sección correspondiente para obtener path, method, operation
+        const section = document.getElementById(sectionId);
+        if (!section) return;
+
+        // Extraer información del section ID (formato: método-path)
+        const parts = sectionId.split('-');
+        if (parts.length < 2) return;
+
+        const method = parts[0];
+        let path = '/' + parts.slice(1).join('/').replace(/-/g, '/');
+        
+        // Buscar la operación correspondiente en la configuración
+        const pathConfig = this.config?.paths?.[path];
+        const operation = pathConfig?.[method.toLowerCase()];
+        
+        if (!operation) return;
+
+        // Regenerar el ejemplo según el lenguaje
+        let newContent = '';
+        switch (lang) {
+            case 'curl':
+                newContent = this.generateCurlCodeContent(path, method, operation);
+                break;
+            case 'js':
+                newContent = this.generateJSCodeContent(path, method, operation);
+                break;
+            case 'python':
+                newContent = this.generatePythonCodeContent(path, method, operation);
+                break;
+            default:
+                return;
+        }
+        
+        if (newContent) {
+            codeContent.innerHTML = newContent;
+        }
+    }
+
+    /**
+     * Genera el contenido HTML para cURL
+     */
+    generateCurlCodeContent(path, method, operation) {
+        const baseUrl = this.config?.servers?.[0]?.url || 'https://api.example.com';
+        let curlCommand = `curl -X ${method.toUpperCase()} "${baseUrl}${path}"`;
+
+        // Headers
+        if (this.config.security?.[0]) {
+            const accessToken = this.getValidAccessToken();
+            if (accessToken) {
+                curlCommand += `\n  -H "Authorization: Bearer ${accessToken}"`;
+            } else {
+                curlCommand += '\n  -H "Authorization: Bearer {access_token}"';
+            }
+        }
+        curlCommand += '\n  -H "Content-Type: application/json"';
+
+        // Body para POST/PUT/PATCH
+        if (['post', 'put', 'patch'].includes(method.toLowerCase()) && operation.requestBody) {
+            curlCommand += '\n  -d @/request.json';
+        }
+
+        return this.formatCodeBlock(curlCommand, 'curl');
+    }
+
+    /**
+     * Genera el contenido HTML para JavaScript
+     */
+    generateJSCodeContent(path, method, operation) {
+        const baseUrl = this.config.servers?.[0]?.url || 'https://api.example.com';
+        let code = `fetch('${baseUrl}${path}', {\n    method: '${method.toUpperCase()}',\n    headers: {\n        'Content-Type': 'application/json',`;
+        
+        if (this.config.security?.[0]) {
+            const accessToken = this.getValidAccessToken();
+            if (accessToken) {
+                code += `\n        'Authorization': 'Bearer ${accessToken}',`;
+            } else {
+                code += `\n        'Authorization': 'Bearer {access_token}',`;
+            }
+        }
+        code += `\n    },`;
+        
+        if (['post', 'put', 'patch'].includes(method.toLowerCase()) && operation.requestBody) {
+            code += `\n    body: JSON.stringify({ /* datos */ }),`;
+        }
+        code += `\n})\n.then(response => response.json())\n.then(data => console.log(data))\n.catch(error => console.error(error));`;
+        
+        return this.formatCodeBlock(code, 'js');
+    }
+
+    /**
+     * Genera el contenido HTML para Python
+     */
+    generatePythonCodeContent(path, method, operation) {
+        const baseUrl = this.config.servers?.[0]?.url || 'https://api.example.com';
+        let code = `import requests\n\nurl = '${baseUrl}${path}'\nheaders = {\n    'Content-Type': 'application/json',`;
+        
+        if (this.config.security?.[0]) {
+            const accessToken = this.getValidAccessToken();
+            if (accessToken) {
+                code += `\n    'Authorization': 'Bearer ${accessToken}',`;
+            } else {
+                code += `\n    'Authorization': 'Bearer {access_token}',`;
+            }
+        }
+        code += `\n}`;
+        
+        if (['post', 'put', 'patch'].includes(method.toLowerCase()) && operation.requestBody) {
+            code += `\ndata = { # datos }\nresponse = requests.${method.toLowerCase()}(url, headers=headers, json=data)`;
+        } else {
+            code += `\nresponse = requests.${method.toLowerCase()}(url, headers=headers)`;
+        }
+        code += `\nprint(response.json())`;
+        
+        return this.formatCodeBlock(code, 'python');
     }
 
     /**
