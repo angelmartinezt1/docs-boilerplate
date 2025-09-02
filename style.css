@@ -3578,3 +3578,82 @@ body.dark-mode .response-content {
     word-break: keep-all;
     white-space: nowrap;
 }
+
+/* ========== COLORES SUAVES PARA MEJOR DISTINCIÓN VISUAL ========== */
+
+/* Sección de nombre y descripción del endpoint */
+.endpoint-header {
+    background: rgba(59, 130, 246, 0.015) !important; /* Azul muy suave */
+    transition: background-color 0.3s ease;
+}
+
+body.dark-mode .endpoint-header {
+    background: rgba(59, 130, 246, 0.025) !important; /* Azul muy suave para dark mode */
+}
+
+/* Secciones principales del contenido */
+.section {
+    background: rgba(16, 185, 129, 0.008); /* Verde muy suave */
+    border-radius: 8px;
+    padding: 16px;
+    margin: 8px 0;
+    transition: background-color 0.3s ease;
+}
+
+body.dark-mode .section {
+    background: rgba(16, 185, 129, 0.015); /* Verde muy suave para dark mode */
+}
+
+/* Sección de propiedades/parámetros */
+.parameters-section,
+.properties-section,
+.schema-section {
+    background: rgba(147, 51, 234, 0.01); /* Púrpura muy suave */
+    border-radius: 6px;
+    padding: 12px;
+    margin: 6px 0;
+}
+
+body.dark-mode .parameters-section,
+body.dark-mode .properties-section,
+body.dark-mode .schema-section {
+    background: rgba(147, 51, 234, 0.018); /* Púrpura muy suave para dark mode */
+}
+
+/* Sección "Probar endpoint" (request/response) */
+.request-section {
+    background: rgba(245, 158, 11, 0.012) !important; /* Amarillo muy suave */
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.response-section {
+    background: rgba(239, 68, 68, 0.01) !important; /* Rojo muy suave */
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+body.dark-mode .request-section {
+    background: rgba(245, 158, 11, 0.02) !important; /* Amarillo muy suave para dark mode */
+}
+
+body.dark-mode .response-section {
+    background: rgba(239, 68, 68, 0.018) !important; /* Rojo muy suave para dark mode */
+}
+
+/* Efectos hover muy sutiles */
+.section:hover {
+    background: rgba(16, 185, 129, 0.015);
+}
+
+body.dark-mode .section:hover {
+    background: rgba(16, 185, 129, 0.025);
+}
+
+.endpoint-header:hover {
+    background: rgba(59, 130, 246, 0.025) !important;
+}
+
+body.dark-mode .endpoint-header:hover {
+    background: rgba(59, 130, 246, 0.035) !important;
+}
